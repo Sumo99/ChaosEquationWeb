@@ -1,0 +1,121 @@
+
+<!-- Gary Ang | Ming | playgrd, altered by sumo99 -->
+<!-- playgrd.com -->
+<!-- A dynamic lorenz in three.js-->
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Chaos Equations in three.js</title>
+        <style>
+        </style>
+    </head>
+    <body>
+        <script type="text/javascript" src="./libs/three.js"></script>
+
+        <script>
+
+            // Setting up the scene
+            var scene = new THREE.Scene();
+
+            // Setting up a camera
+            var camera = new THREE.PerspectiveCamera( 100, window.innerWidth / window.innerHeight, 0.1, 50 ); //changed the perspective so that it is more zoomed out
+            camera.position.z = 40;
+
+            // Setting up the renderer. This will be called later to render scene with the camera setup above
+            var renderer = new THREE.WebGLRenderer( { antialias: true } );
+            renderer.setPixelRatio( window.devicePixelRatio );
+            renderer.setSize( window.innerWidth, window.innerHeight );
+            renderer.setClearColor( 0x000051, 1 ); //prompt user for color
+            document.body.appendChild( renderer.domElement );            
+
+            // Setting up a group to hold the items we will be creating together
+            var group = new THREE.Group();
+
+            // Array curve holds the positions of points generated from a lorenz equation; lorenz function below generates the points and returns an array of points
+            var arrayCurve = lorenz();
+
+
+            // Generating the geometry
+            var curve = new THREE.CatmullRomCurve3(arrayCurve);
+            var geometry = new THREE.Geometry();
+            geometry.vertices = curve.getPoints(100000);
+
+            // Generating a cloud of point
+            var pcMat = new THREE.PointsMaterial();
+            const rgb_tuple=[Math.floor(Math.random()*256),Math.floor(Math.random()*256),Math.floor(Math.random()*256)]; //generate the random rgbs
+            const rgb_color="rgb("+rgb_tuple[0]+", "+rgb_tuple[1]+", "+rgb_tuple[2]+")" //when the user refreshs the website, they will see a new color
+            pcMat.color = new THREE.Color(rgb_color); //init with the new color
+            pcMat.transparent = true;
+            pcMat.size = 0.1; //user switch
+            pcMat.blending = THREE.AdditiveBlending;
+            pc = new THREE.Points(geometry, pcMat);
+            pc.sizeAttenuation = false;
+            pc.sortPoints = true;
+
+            group.add(pc);
+
+            scene.add( group );
+
+            var prevFog = true;
+
+            const render = function () {
+
+                renderer.render( scene, camera );
+                requestAnimationFrame( render );
+                
+
+                //Varying the points on each frame
+                var count = 0;
+                var geometry = pc.geometry;
+                var a = 0.9+Math.random()*6;
+                var b = 3.4+Math.random()*7;
+                var c=  1.1+Math.random()*2;
+                var d=  0.5+Math.random()*2;
+                var f = 9.9+Math.random()*8;
+                var g = 1+Math.random();
+                
+                geometry.verticesNeedUpdate = true;
+
+                group.rotation.x += 0.01;
+                group.rotation.y += 0.02;
+                group.rotation.z += 0.01;
+
+            };
+
+            window.addEventListener( 'resize', function () {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize( window.innerWidth, window.innerHeight );
+
+            }, false );
+
+            render();
+
+            function lorenz(){
+
+                var arrayCurve=[];
+
+                var x = 0.01, y = 0.01, z = 0.01;
+                var a = 0.9;
+                var b = 1.4;
+                var c = 1.1;
+                var d = 0.5;
+                var e = 1.2;
+                var f = 9.9;
+                var g = 1;
+                var t = 0.001;
+                for (var i=0;i<100000;i++){
+
+                x = x - t*a*x +c*t*y*y -d*t*z*z + t*a*f; 
+                y = y - t*y + t*x*y - t*b*x*z + t*g;
+                z = z - t*z + t*b*x*y + t*x*z;
+
+                arrayCurve.push(new THREE.Vector3(x, y, z).multiplyScalar(1));   
+                }
+                return arrayCurve;
+            }
+        </script>
+    </body>
+</html>
