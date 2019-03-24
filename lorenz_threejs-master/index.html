@@ -1,121 +1,173 @@
-
 <!-- Gary Ang | Ming | playgrd, altered by sumo99 -->
 <!-- playgrd.com -->
 <!-- A dynamic lorenz in three.js-->
-
+<!--- Licensed GNU GPL license v3 -->
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="utf-8">
-        <title>Chaos Equations in three.js</title>
-        <style>
-        </style>
-    </head>
-    <body>
-        <script type="text/javascript" src="./libs/three.js"></script>
 
-        <script>
+<head>
+    <meta charset="utf-8">
+    <title>Chaos Equations in three.js</title>
+    <script src="jscolor.js"></script>
+    <link rel="stylesheet" type="text/css" href="style.css">
+</head>
 
-            // Setting up the scene
-            var scene = new THREE.Scene();
+<body text="#ffffff">
+    <script type="text/javascript" src="./libs/three.js"></script>
+    <script>
+        function aliasToggle() {
+            var antialiasVal = renderer.antialias; //get the previous value of the antialias variable
+            renderer.antialias = !antialiasVal; //toggle;
+        }
 
-            // Setting up a camera
-            var camera = new THREE.PerspectiveCamera( 100, window.innerWidth / window.innerHeight, 0.1, 50 ); //changed the perspective so that it is more zoomed out
-            camera.position.z = 40;
+        // Setting up the scene
+        var scene = new THREE.Scene();
 
-            // Setting up the renderer. This will be called later to render scene with the camera setup above
-            var renderer = new THREE.WebGLRenderer( { antialias: true } );
-            renderer.setPixelRatio( window.devicePixelRatio );
-            renderer.setSize( window.innerWidth, window.innerHeight );
-            renderer.setClearColor( 0x000051, 1 ); //prompt user for color
-            document.body.appendChild( renderer.domElement );            
+        // Setting up a camera
+        var camera = new THREE.PerspectiveCamera(100, window.innerWidth / window.innerHeight, 0.1, 50); //changed the perspective so that it is more zoomed out
+        camera.position.z = 35; //zoom out the perspective
 
-            // Setting up a group to hold the items we will be creating together
-            var group = new THREE.Group();
+        // Setting up the renderer. This will be called later to render scene with the camera setup above
+        var renderer = new THREE.WebGLRenderer({ antialias: true }); //user option
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setClearColor(0x000051, 1); //prompt user for color
+        document.body.appendChild(renderer.domElement);
 
-            // Array curve holds the positions of points generated from a lorenz equation; lorenz function below generates the points and returns an array of points
-            var arrayCurve = lorenz();
+        // Setting up a group to hold the items we will be creating together
+        var group = new THREE.Group();
+
+        // Array curve holds the positions of points generated from a lorenz equation; lorenz function below generates the points and returns an array of points
+        var arrayCurve = lorenz();
 
 
-            // Generating the geometry
-            var curve = new THREE.CatmullRomCurve3(arrayCurve);
-            var geometry = new THREE.Geometry();
-            geometry.vertices = curve.getPoints(100000);
+        // Generating the geometry
+        var curve = new THREE.CatmullRomCurve3(arrayCurve);
+        var geometry = new THREE.Geometry();
+        geometry.vertices = curve.getPoints(100000);
 
-            // Generating a cloud of point
-            var pcMat = new THREE.PointsMaterial();
-            const rgb_tuple=[Math.floor(Math.random()*256),Math.floor(Math.random()*256),Math.floor(Math.random()*256)]; //generate the random rgbs
-            const rgb_color="rgb("+rgb_tuple[0]+", "+rgb_tuple[1]+", "+rgb_tuple[2]+")" //when the user refreshs the website, they will see a new color
-            pcMat.color = new THREE.Color(rgb_color); //init with the new color
-            pcMat.transparent = true;
-            pcMat.size = 0.1; //user switch
-            pcMat.blending = THREE.AdditiveBlending;
-            pc = new THREE.Points(geometry, pcMat);
-            pc.sizeAttenuation = false;
-            pc.sortPoints = true;
+        // Generating a cloud of point
+        var pcMat = new THREE.PointsMaterial();
 
-            group.add(pc);
+        const rgb_tuple = [Math.floor(Math.random() * 256), Math.floor(Math.random() * 256), Math.floor(Math.random() * 256)]; //generate the random rgbs
+        const rgb_color = "rgb(" + rgb_tuple[0] + ", " + rgb_tuple[1] + ", " + rgb_tuple[2] + ")" //when the user refreshs the website, they will see a new color
 
-            scene.add( group );
+        function componentToHex(c) { //convert rbg number to hex
+            var hex = c.toString(16);
+            return hex.length == 1 ? "0" + hex : hex;
+        }
 
-            var prevFog = true;
+        function rgbToHex(r, g, b) {
+            return componentToHex(r) + componentToHex(g) + componentToHex(b);
+        }
 
-            const render = function () {
+        window.onload = function () { //this function just makes sure that the color picker matches the particle color
+            const colorPicker = document.getElementById("canvas-particle-color");
+            colorPicker.style.backgroundColor = rgb_color; //change the particle color picker to displayed color of the particle
+            colorPicker.value = rgbToHex(rgb_tuple[0], rgb_tuple[1], rgb_tuple[2]);
+        }
 
-                renderer.render( scene, camera );
-                requestAnimationFrame( render );
-                
+        pcMat.color = new THREE.Color(rgb_color); //init with the new color
+        pcMat.transparent = true;
+        pcMat.size = 0.1; //user switch
+        pcMat.blending = THREE.AdditiveBlending;
+        pc = new THREE.Points(geometry, pcMat);
+        pc.sizeAttenuation = true;
+        pc.sortPoints = true;
 
-                //Varying the points on each frame
-                var count = 0;
-                var geometry = pc.geometry;
-                var a = 0.9+Math.random()*6;
-                var b = 3.4+Math.random()*7;
-                var c=  1.1+Math.random()*2;
-                var d=  0.5+Math.random()*2;
-                var f = 9.9+Math.random()*8;
-                var g = 1+Math.random();
-                
-                geometry.verticesNeedUpdate = true;
+        group.add(pc);
 
-                group.rotation.x += 0.01;
-                group.rotation.y += 0.02;
-                group.rotation.z += 0.01;
+        scene.add(group);
+        var t = 0.001; //this is the speed of the simulation, 0.001 is normal but 0.01 is very fast
+        var prevFog = true;
+        const render = function () { //update the changes from the lorenz function and possibly map each with a new function
 
-            };
+            renderer.render(scene, camera);
+            requestAnimationFrame(render);
 
-            window.addEventListener( 'resize', function () {
-                camera.aspect = window.innerWidth / window.innerHeight;
-                camera.updateProjectionMatrix();
-                renderer.setSize( window.innerWidth, window.innerHeight );
+            //Varying the points on each frame
+            var count = 0;
+            var geometry = pc.geometry;
+            var a = 0.9 + Math.random() * 6; //update the random variables
+            var b = 3.4 + Math.random() * 7;
+            var f = 9.9 + Math.random() * 8;
+            var g = 1 + Math.random() * 2;
 
-            }, false );
+            geometry.vertices.forEach(function (v) { // every single point in the graph first is iterated by lorenz and then composed by this
+                v.x = v.x - t * a * v.x + t * v.y * v.y - t * v.z * v.z + t * a * f; //if v.x=x, then the x is unchanged, ditto for the rest 
+                v.y = v.y - t * v.y + t * v.x * v.y - t * b * v.x * v.z + t * g;
+                v.z = v.z - t * v.z + t * b * v.x * v.y + t * v.x * v.z;
+            })
 
-            render();
+            geometry.verticesNeedUpdate = true;
+            group.rotation.x += 0.005;
+            group.rotation.y += 0.01;
+            group.rotation.z += 0.005;
+            console.log(t);
+        };
 
-            function lorenz(){
+        window.addEventListener('resize', function () {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
 
-                var arrayCurve=[];
+        }, false);
 
-                var x = 0.01, y = 0.01, z = 0.01;
-                var a = 0.9;
-                var b = 1.4;
-                var c = 1.1;
-                var d = 0.5;
-                var e = 1.2;
-                var f = 9.9;
-                var g = 1;
-                var t = 0.001;
-                for (var i=0;i<100000;i++){
+        render();
 
-                x = x - t*a*x +c*t*y*y -d*t*z*z + t*a*f; 
-                y = y - t*y + t*x*y - t*b*x*z + t*g;
-                z = z - t*z + t*b*x*y + t*x*z;
+        function lorenz() {
 
-                arrayCurve.push(new THREE.Vector3(x, y, z).multiplyScalar(1));   
-                }
-                return arrayCurve;
+            var arrayCurve = [];
+
+            var x = 0.01, y = 0.01, z = 0.01;
+            var a = 0.9;
+            var b = 1.4;
+            var f = 9.9;
+            var g = 1.3;
+            var t = 0.001;
+            for (var i = 0; i < 100000; i++) {
+                x = x - t * a * x + t * y * y - b * t * z * z + t * a * f;  //the dynamic equation that we iterate over
+                y = y - t * y + t * x * y - t * b * x * z + t * g;
+                z = z - t * z + t * b * x * y + t * x * z;
+                arrayCurve.push(new THREE.Vector3(x, y, z).multiplyScalar(1));
             }
-        </script>
-    </body>
+            return arrayCurve;
+        }
+        function speedChanger() {
+            var slider = document.getElementById("simulSlider");
+            t = (slider.value / 10000); //changing a global variable is evil!
+        }
+        function toggleFullscreen(event) {
+            var element = document.body;
+
+            if (event instanceof HTMLElement) {
+                element = event;
+            }
+
+            var isFullscreen = document.webkitIsFullScreen || document.mozFullScreen || false;
+            element.requestFullScreen = element.requestFullScreen || element.webkitRequestFullScreen || element.mozRequestFullScreen || function () { return false; };
+            document.cancelFullScreen = document.cancelFullScreen || document.webkitCancelFullScreen || document.mozCancelFullScreen || function () { return false; };
+            isFullscreen ? document.cancelFullScreen() : element.requestFullScreen();
+        }
+
+        const updateBg = (jscolor) => renderer.setClearColor(parseInt(jscolor, 16), 1); //set clear color only accepts integers
+        const updateParticle = (jscolor) => pcMat.color = new THREE.Color(parseInt(jscolor, 16)); //three.color is the actual color of the particles
+
+    </script>
+    <div class="controls">
+        <button onclick="toggleFullscreen()" title="make everything fullscreen" id="fullscreen">Fullscreen!</button>
+        <button onclick="aliasToggle()" title="(Toggle on or off)" id="antialias">Anti-alias</button>
+        <div class="simulationSpeedSlider" oninput="speedChanger()">
+            Simulation speed:<input type="range" min="1" max="100" value="10" class="slider" id="simulSlider"
+                title="Change simulation speed">
+        </div>
+        <div class="colorpickers">
+            Background Color: <input class="jscolor" id="canvas-bg-color" onchange="updateBg(this.jscolor)"
+                value="000051">
+            <p>Particle color:</p> <input class="jscolor" id="canvas-particle-color"
+                onchange="updateParticle(this.jscolor)" value="000051">
+        </div>
+    </div>
+</body>
+
 </html>
