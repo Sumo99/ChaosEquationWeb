@@ -1,7 +1,7 @@
 <!-- Gary Ang | Ming | playgrd, altered by sumo99 -->
 <!-- playgrd.com -->
 <!-- A dynamic lorenz in three.js-->
-<!--- Licensed GNU GPL license v3 -->
+<!--- MIT license -->
 <!DOCTYPE html>
 <html lang="en">
 
@@ -155,18 +155,21 @@
 
     </script>
     <div class="controls">
-        <button onclick="toggleFullscreen()" title="make everything fullscreen" id="fullscreen">Fullscreen!</button>
-        <button onclick="aliasToggle()" title="(Toggle on or off)" id="antialias">Anti-alias</button>
+        <p><button onclick="toggleFullscreen()" title="make everything fullscreen" id="fullscreen">Fullscreen!</button>
+        </p> <!-- the <p> tags allow for better spacing -->
+        <p><button onclick="aliasToggle()" title="(Toggle on or off)" id="antialias">Anti-alias</button></p>
         <div class="simulationSpeedSlider" oninput="speedChanger()">
             Simulation speed:<input type="range" min="1" max="100" value="10" class="slider" id="simulSlider"
                 title="Change simulation speed">
         </div>
-        <div class="colorpickers">
-            Background Color: <input class="jscolor" id="canvas-bg-color" onchange="updateBg(this.jscolor)"
-                value="000051">
-            <p>Particle color:</p> <input class="jscolor" id="canvas-particle-color"
-                onchange="updateParticle(this.jscolor)" value="000051">
-        </div>
+        <p>
+            <div class="colorpickers">
+                Background Color: <input class="jscolor" id="canvas-bg-color" onchange="updateBg(this.jscolor)"
+                    value="000051">
+                <p>Particle color:</p> <input class="jscolor" id="canvas-particle-color"
+                    onchange="updateParticle(this.jscolor)" value="000051">
+            </div>
+        </p>
     </div>
 </body>
 
