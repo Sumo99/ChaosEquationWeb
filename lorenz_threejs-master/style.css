@@ -1,4 +1,3 @@
-
 .controls{
     position:absolute;
     top:0px;
@@ -9,12 +8,16 @@
 }
 #antialias{
     position: relative;
-    top:25px;
-    left: -27%;
+    top:15px;
 }
 .simulationSpeedSlider{
     position: relative;
     top:20px;
+}
+#simulSlider{
+    position: relative;
+    top: 5px;
+    left: 10px;
 }
 .colorpickers{
     position: relative;
