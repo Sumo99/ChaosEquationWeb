@@ -1,0 +1,28 @@
+
+.controls{
+    position:absolute;
+    top:0px;
+    margin: 5px;
+    padding:5px;
+    float: left;
+    padding:10px;
+}
+#antialias{
+    position: relative;
+    top:25px;
+    left: -27%;
+}
+.simulationSpeedSlider{
+    position: relative;
+    top:20px;
+}
+.colorpickers{
+    position: relative;
+    top:25px;
+}
+#canvas-particle-color{
+    position: relative;
+    float:left;
+    top:-35px;
+    left:105px;
+}
