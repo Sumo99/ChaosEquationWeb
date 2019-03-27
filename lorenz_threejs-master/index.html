@@ -21,21 +21,28 @@
         }
 
         // Setting up the scene
-        var scene = new THREE.Scene();
+        const scene = new THREE.Scene();
+        var killRotation = false;
+
+        var t = 0.001; //this is the speed of the simulation, 0.001 is normal but 0.01 is very fast
+
+        var x_rot = 0.005; //speed of the rotation in the x,y,z axis
+        var y_rot = 0.01;
+        var z_rot = 0.005;
 
         // Setting up a camera
-        var camera = new THREE.PerspectiveCamera(100, window.innerWidth / window.innerHeight, 0.1, 50); //changed the perspective so that it is more zoomed out
-        camera.position.z = 35; //zoom out the perspective
+        const camera = new THREE.PerspectiveCamera(100, window.innerWidth / window.innerHeight, 0.1, 50); //changed the perspective so that it is more zoomed out
+        camera.position.z = 35; //zoom out the perspective, view from 35 units above the origin
 
         // Setting up the renderer. This will be called later to render scene with the camera setup above
-        var renderer = new THREE.WebGLRenderer({ antialias: true }); //user option
+        const renderer = new THREE.WebGLRenderer({ antialias: true }); //user option
         renderer.setPixelRatio(window.devicePixelRatio);
         renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setClearColor(0x000051, 1); //prompt user for color
+        renderer.setClearColor(0x000051, 1);
         document.body.appendChild(renderer.domElement);
 
         // Setting up a group to hold the items we will be creating together
-        var group = new THREE.Group();
+        const group = new THREE.Group();
 
         // Array curve holds the positions of points generated from a lorenz equation; lorenz function below generates the points and returns an array of points
         var arrayCurve = lorenz();
@@ -43,7 +50,7 @@
 
         // Generating the geometry
         var curve = new THREE.CatmullRomCurve3(arrayCurve);
-        var geometry = new THREE.Geometry();
+        const geometry = new THREE.Geometry();
         geometry.vertices = curve.getPoints(100000);
 
         // Generating a cloud of point
@@ -78,7 +85,7 @@
         group.add(pc);
 
         scene.add(group);
-        var t = 0.001; //this is the speed of the simulation, 0.001 is normal but 0.01 is very fast
+
         var prevFog = true;
         const render = function () { //update the changes from the lorenz function and possibly map each with a new function
 
@@ -88,8 +95,11 @@
             //Varying the points on each frame
             var count = 0;
             var geometry = pc.geometry;
-            var a = 0.9 + Math.random() * 6; //update the random variables
+            var a = 0.9 + Math.random() * 6; //update the variables to make them random and non deterministic
             var b = 3.4 + Math.random() * 7;
+            var c = 1.6 + Math.random() * 7;
+            var d = 2.2 + Math.random() * 3;
+            var e = 1.9 + Math.random() * 4;
             var f = 9.9 + Math.random() * 8;
             var g = 1 + Math.random() * 2;
 
@@ -100,10 +110,11 @@
             })
 
             geometry.verticesNeedUpdate = true;
-            group.rotation.x += 0.005;
-            group.rotation.y += 0.01;
-            group.rotation.z += 0.005;
-            console.log(t);
+
+            group.rotation.x += x_rot;
+            group.rotation.y += y_rot;
+            group.rotation.z += z_rot;
+
         };
 
         window.addEventListener('resize', function () {
@@ -121,24 +132,48 @@
 
             var x = 0.01, y = 0.01, z = 0.01;
             var a = 0.9;
-            var b = 1.4;
+            var b = 3.4;
+            var c = 1.6;
+            var d = 2.2;
+            var e = 1.9;
             var f = 9.9;
-            var g = 1.3;
+            var g = 1.0;
             var t = 0.001;
             for (var i = 0; i < 100000; i++) {
-                x = x - t * a * x + t * y * y - b * t * z * z + t * a * f;  //the dynamic equation that we iterate over
-                y = y - t * y + t * x * y - t * b * x * z + t * g;
-                z = z - t * z + t * b * x * y + t * x * z;
+                x = x - t * a * x + t * y * y * c - b * t * z * z + t * a * f;  //the dynamic equation that we iterate over
+                y = y - t * y * d + t * x * y * e - t * b * x * z + t * g;
+                z = z - e * t * z + t * b * x * y + g * t * x * z;
                 arrayCurve.push(new THREE.Vector3(x, y, z).multiplyScalar(1));
             }
             return arrayCurve;
         }
+
         function speedChanger() {
             var slider = document.getElementById("simulSlider");
             t = (slider.value / 10000); //changing a global variable is evil!
         }
-        function toggleFullscreen(event) {
-            var element = document.body;
+
+        function toggleRotation() {
+            killRotation = !killRotation;
+            if (killRotation) {
+                console.log("killing");
+                x_rot = 0;
+                y_rot = 0;
+                z_rot = 0;
+            }
+            else {
+                console.log("reviving");
+                x_rot = 0.005;
+                y_rot = 0.01;
+                z_rot = 0.005;
+            }
+        }
+        function displayVars() {
+
+        }
+
+        function toggleFullscreen(event) { //code is from https://gist.github.com/demonixis/5188326
+            var element = document.body; //the whole body of the website will be fullscreen
 
             if (event instanceof HTMLElement) {
                 element = event;
@@ -154,10 +189,14 @@
         const updateParticle = (jscolor) => pcMat.color = new THREE.Color(parseInt(jscolor, 16)); //three.color is the actual color of the particles
 
     </script>
+    <div class="variables">
+
+    </div>
     <div class="controls">
-        <p><button onclick="toggleFullscreen()" title="make everything fullscreen" id="fullscreen">Fullscreen!</button>
+        <p><button onclick="toggleFullscreen()" title="make everything fullscreen" id="fullscreen">Toggle
+                Fullscreen!</button>
         </p> <!-- the <p> tags allow for better spacing -->
-        <p><button onclick="aliasToggle()" title="(Toggle on or off)" id="antialias">Anti-alias</button></p>
+        <p><button onclick="aliasToggle()" title="(Toggle on or off)" id="antialias">Toggle Anti-alias</button></p>
         <div class="simulationSpeedSlider" oninput="speedChanger()">
             Simulation speed:<input type="range" min="1" max="100" value="10" class="slider" id="simulSlider"
                 title="Change simulation speed">
@@ -169,7 +208,9 @@
                 <p>Particle color:</p> <input class="jscolor" id="canvas-particle-color"
                     onchange="updateParticle(this.jscolor)" value="000051">
             </div>
-        </p>
+            <p><button onclick="toggleRotation()" class="rotation" title="Stop the rotation and observe from the origin"
+                    id="fullscreen">Toggle Rotation</button>
+            </p>
     </div>
 </body>
 
