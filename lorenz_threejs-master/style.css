@@ -1,3 +1,6 @@
+*{
+    position: relative;
+}
 .controls{
     position:absolute;
     top:0px;
@@ -7,24 +10,23 @@
     padding:10px;
 }
 #antialias{
-    position: relative;
     top:15px;
 }
 .simulationSpeedSlider{
-    position: relative;
     top:20px;
 }
 #simulSlider{
-    position: relative;
     top: 5px;
     left: 10px;
 }
 .colorpickers{
-    position: relative;
     top:25px;
 }
+.rotation{
+    left: -58%;
+    top: 30px;
+}
 #canvas-particle-color{
-    position: relative;
     float:left;
     top:-35px;
     left:105px;
