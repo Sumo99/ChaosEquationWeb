@@ -10,14 +10,25 @@
     <title>Chaos Equations in three.js</title>
     <script src="jscolor.js"></script>
     <link rel="stylesheet" type="text/css" href="style.css">
+    <link rel="icon" href="favicon.ico" type="image/x-icon" />
 </head>
 
 <body text="#ffffff">
     <script type="text/javascript" src="./libs/three.js"></script>
     <script>
+
+        const xxt = (x, t) => { return (x * x * t) }
+        const xyz = (x, y, z) => { return (x * y * x) }
+        const xzz = (x, z) => { return (x * z * z) }
+        const yxt = (x, y, t) => { return (x * y * t) }
+        const yyx = (x, y) => { return (x * y * y) }
+        const ytz = (t, y, z) => { return (t * y * z) }
+        const zxx = (x, z) => { return (z * x * x) }
+        const ztx = (x, t, z) => { return (z * t * x) }
+        const zyy = (z, y) => { return (z * y * y) }
+
         function aliasToggle() {
-            var antialiasVal = renderer.antialias; //get the previous value of the antialias variable
-            renderer.antialias = !antialiasVal; //toggle;
+            renderer.antialias = !renderer.antialias; //toggle;
         }
 
         // Setting up the scene
@@ -51,7 +62,7 @@
         // Generating the geometry
         var curve = new THREE.CatmullRomCurve3(arrayCurve);
         const geometry = new THREE.Geometry();
-        geometry.vertices = curve.getPoints(100000);
+        geometry.vertices = curve.getPoints((100000 / 2));
 
         // Generating a cloud of point
         var pcMat = new THREE.PointsMaterial();
@@ -104,9 +115,9 @@
             var g = 1 + Math.random() * 2;
 
             geometry.vertices.forEach(function (v) { // every single point in the graph first is iterated by lorenz and then composed by this
-                v.x = v.x - t * a * v.x + t * v.y * v.y - t * v.z * v.z + t * a * f; //if v.x=x, then the x is unchanged, ditto for the rest 
-                v.y = v.y - t * v.y + t * v.x * v.y - t * b * v.x * v.z + t * g;
-                v.z = v.z - t * v.z + t * b * v.x * v.y + t * v.x * v.z;
+                v.x = v.x - t * a * v.x + t * v.y * v.y - t * v.z * v.z + t * c * f; //if v.x=x, then the x is unchanged, ditto for the rest 
+                v.y = v.y - t * d * v.y + t * e * v.x * v.y - t * b * v.x * v.z + t * g;
+                v.z = v.z - t * f * v.z + t * b * v.x * v.y + t * g * v.x * v.z;
             })
 
             geometry.verticesNeedUpdate = true;
@@ -129,21 +140,20 @@
         function lorenz() {
 
             var arrayCurve = [];
-
-            var x = 0.01, y = 0.01, z = 0.01;
-            var a = 0.9;
-            var b = 3.4;
-            var c = 1.6;
-            var d = 2.2;
-            var e = 1.9;
-            var f = 9.9;
-            var g = 1.0;
-            var t = 0.001;
-            for (var i = 0; i < 100000; i++) {
+            x = 0.01, y = 0.01, z = 0.01;
+            a = 0.9;
+            b = 3.4;
+            c = 1.6;
+            d = 2.2;
+            e = 1.9;
+            f = 9.9;
+            g = 1.0;
+            t = 0.001;
+            for (var i = 0; i < (100000 / 2); i++) {
                 x = x - t * a * x + t * y * y * c - b * t * z * z + t * a * f;  //the dynamic equation that we iterate over
                 y = y - t * y * d + t * x * y * e - t * b * x * z + t * g;
                 z = z - e * t * z + t * b * x * y + g * t * x * z;
-                arrayCurve.push(new THREE.Vector3(x, y, z).multiplyScalar(1));
+                arrayCurve.push(new THREE.Vector3(x, y, z));
             }
             return arrayCurve;
         }
@@ -156,22 +166,32 @@
         function toggleRotation() {
             killRotation = !killRotation;
             if (killRotation) {
-                console.log("killing");
                 x_rot = 0;
                 y_rot = 0;
                 z_rot = 0;
             }
             else {
-                console.log("reviving");
                 x_rot = 0.005;
                 y_rot = 0.01;
                 z_rot = 0.005;
             }
         }
-        function displayVars() {
 
+        function genEquation() {
+            const eqArrX = Array.from({ length: 9 }, () => Math.floor(Math.random() * 9) - 6);
+            const eqArrY = Array.from({ length: 9 }, () => Math.floor(Math.random() * 9) - 6);
+            const eqArrZ = Array.from({ length: 9 }, () => Math.floor(Math.random() * 9) - 6);
+
+            console.log(eqArrX);
+            console.log(eqArrY);
+            console.log(eqArrZ);
+            t = 0.001; //reset the time
+            geometry.vertices.forEach(function (v) { // every single point in the graph first is iterated by lorenz and then composed by this
+                v.x = v.x - eqArrX[0] * xxt(v.x, t) + eqArrX[2] * xzz(v.x, v.z) + eqArrX[3] * yxt(v.x, v.y, t) - eqArrX[5] * xyz(v.y, t, v.z);
+                v.y = v.y + eqArrY[3] * t * yxt(v.x, v.y, t) + eqArrY[4] * xyz(v.z, v.y, v.x) + eqArrY[5] * ytz(v.z, t, v.y);
+                v.z = v.z - eqArrZ[6] * zxx(v.x, v.z) + eqArrZ[7] * t * ztx(v.x, t, v.z) + eqArrZ[8] * zyy(v.z, v.y);
+            })
         }
-
         function toggleFullscreen(event) { //code is from https://gist.github.com/demonixis/5188326
             var element = document.body; //the whole body of the website will be fullscreen
 
@@ -189,9 +209,6 @@
         const updateParticle = (jscolor) => pcMat.color = new THREE.Color(parseInt(jscolor, 16)); //three.color is the actual color of the particles
 
     </script>
-    <div class="variables">
-
-    </div>
     <div class="controls">
         <p><button onclick="toggleFullscreen()" title="make everything fullscreen" id="fullscreen">Toggle
                 Fullscreen!</button>
@@ -205,12 +222,15 @@
             <div class="colorpickers">
                 Background Color: <input class="jscolor" id="canvas-bg-color" onchange="updateBg(this.jscolor)"
                     value="000051">
-                <p>Particle color:</p> <input class="jscolor" id="canvas-particle-color"
+                <p>Particle color:</p> <input class="jscolor" id="canvas-particle-color" style="left: 30%;"
                     onchange="updateParticle(this.jscolor)" value="000051">
             </div>
             <p><button onclick="toggleRotation()" class="rotation" title="Stop the rotation and observe from the origin"
                     id="fullscreen">Toggle Rotation</button>
             </p>
+    </div>
+    <div>
+        <button onclick="genEquation()" title="Generate a completely new equation" id="genEquation">Suprise Me!</button>
     </div>
 </body>
 
